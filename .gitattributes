@@ -1,10 +1,10 @@
-docs/
-examples/
-.gitignore
-.gitmodules
-.gitattributes
-packages/
-tests/
-vendors/
-release.php
-test.php
+docs export-ignore
+examples export-ignore
+.gitignore export-ignore
+.gitmodules export-ignore
+.gitattributes export-ignore
+packages export-ignore
+tests export-ignore
+vendors export-ignore
+release.php export-ignore
+test.php export-ignore
