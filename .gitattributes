@@ -1,9 +1,0 @@
-docs/ export-ignore
-examples/ export-ignore
-packages/ export-ignore
-tests/ export-ignore
-vendors/ export-ignore
-release.php export-ignore
-test.php export-ignore
-.gitattributes export-ignore text
-.gitignore export-ignore
