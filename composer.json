@@ -1,5 +1,5 @@
 {
-  "name": "jorisvandesande/system_daemon",
+  "name": "jorisvandesande/system-daemon",
   "require": {
     "php": ">=5.1.2.0"
   },
