@@ -5,3 +5,5 @@ tests/ export-ignore
 vendors/ export-ignore
 release.php export-ignore
 test.php export-ignore
+.gitattributes export-ignore
+.gitignore export-ignore
