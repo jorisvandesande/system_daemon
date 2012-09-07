@@ -175,20 +175,6 @@ class System_Daemon
      * @see getOption()
      */
     static protected $_optionDefinitions = array(
-        'usePEAR' => array(
-            'type' => 'boolean',
-            'default' => true,
-            'punch' => 'Whether to run this class using PEAR',
-            'detail' => 'Will run standalone when false',
-            'required' => true,
-        ),
-        'usePEARLogInstance' => array(
-            'type' => 'boolean|object',
-            'default' => false,
-            'punch' => 'Accepts a PEAR_Log instance to handle all logging',
-            'detail' => 'This will replace System_Daemon\'s own logging facility',
-            'required' => true,
-        ),
         'useCustomLogHandler' => array(
             'type' => 'boolean|object',
             'default' => false,
@@ -252,7 +238,7 @@ class System_Daemon
             'default' => '/var/log/{OPTIONS.appName}.log',
             'punch' => 'The log filepath',
             'example' => '/var/log/logparser_daemon.log',
-            'detail' => 'Not applicable if you use PEAR Log',
+            'detail' => '',
             'required' => false,
         ),
         'logPhpErrors' => array(
@@ -513,7 +499,7 @@ class System_Daemon
             }
         }
 
-        // Quickly initialize some defaults like usePEAR
+        // Quickly initialize some defaults
         // by adding the $premature flag
         self::_optionsInit(true);
 
@@ -521,54 +507,25 @@ class System_Daemon
             set_error_handler(array('System_Daemon', 'phpErrors'), E_ALL);
         }
 
-        // To run as a part of PEAR
-        if (self::opt('usePEAR')) {
-            // SPL's autoload will make sure classes are automatically loaded
-            if (false === class_exists('PEAR', true)) {
-                $msg = 'PEAR not found. Install PEAR or run with option: '.
-                    'usePEAR = false';
-                trigger_error($msg, E_USER_ERROR);
-            }
-
-            if (false === class_exists('PEAR_Exception', true)) {
-                $msg = 'PEAR_Exception not found?!';
-                trigger_error($msg, E_USER_ERROR);
-            }
-
-            if (false === class_exists('System_Daemon_Exception', true)) {
-                // PEAR_Exception is OK. PEAR was found already.
-                throw new PEAR_Exception('Class System_Daemon_Exception not found');
-            }
-        }
-
         // Check the PHP configuration
         if (!defined('SIGHUP')) {
             $msg = 'PHP is compiled without --enable-pcntl directive';
-            if (self::opt('usePEAR')) {
-                throw new System_Daemon_Exception($msg);
-            } else {
-                trigger_error($msg, E_USER_ERROR);
-            }
+
+            throw new System_Daemon_Exception($msg);
         }
 
         // Check for CLI
         if ((php_sapi_name() !== 'cli')) {
             $msg = 'You can only create daemon from the command line (CLI-mode)';
-            if (self::opt('usePEAR')) {
-                throw new System_Daemon_Exception($msg);
-            } else {
-                trigger_error($msg, E_USER_ERROR);
-            }
+
+            throw new System_Daemon_Exception($msg);
         }
 
         // Check for POSIX
         if (!function_exists('posix_getpid')) {
             $msg = 'PHP is compiled without --enable-posix directive';
-            if (self::opt('usePEAR')) {
-                throw new System_Daemon_Exception($msg);
-            } else {
-                trigger_error($msg, E_USER_ERROR);
-            }
+
+            throw new System_Daemon_Exception($msg);
         }
 
         // Enable Garbage Collector (PHP >= 5.3)
@@ -585,11 +542,9 @@ class System_Daemon
             }
 
             $msg = 'Crucial options are not set. Review log:';
-            if (self::opt('usePEAR')) {
-                throw new System_Daemon_Exception($msg);
-            } else {
-                trigger_error($msg, E_USER_ERROR);
-            }
+
+            throw new System_Daemon_Exception($msg);
+
         }
 
         // Option validation, more advanced than can be handled by
@@ -1008,11 +963,7 @@ class System_Daemon
 
     /**
      * Almost every deamon requires a log file, this function can
-     * facilitate that. Also handles class-generated errors, chooses
-     * either PEAR handling or PEAR-independant handling, depending on:
-     * self::opt('usePEAR').
-     * Also supports PEAR_Log if you referenc to a valid instance of it
-     * in self::opt('usePEARLogInstance').
+     * facilitate that. Also handles class-generated errors.
      *
      * It logs a string according to error levels specified in array:
      * self::$_logLevels (0 is fatal and handles daemon's death)
@@ -1063,11 +1014,7 @@ class System_Daemon
             }
         }
 
-        // Make use of a PEAR_Log() instance
-        if (self::opt('usePEARLogInstance') !== false) {
-            self::opt('usePEARLogInstance')->log($str . $log_tail, $level);
-            return true;
-        }
+        // Make use of a custom log handler
         if (false !== ($cb = self::opt('useCustomLogHandler'))) {
             if (!is_callable($cb)) {
                 throw new System_Daemon_Exception('Your "useCustomLogHandler" ' .
@@ -1109,8 +1056,7 @@ class System_Daemon
         }
 
         if (!self::opt('logLocation')) {
-            throw new System_Daemon_Exception('Either use PEAR Log or specify '.
-                'a logLocation');
+            throw new System_Daemon_Exception('Specify a logLocation');
         }
 
         // 'Touch' logfile
@@ -1329,9 +1275,7 @@ class System_Daemon
      */
     static protected function _summon()
     {
-        if (self::opt('usePEARLogInstance')) {
-            $logLoc = '(PEAR Log)';
-        } else if (self::opt('useCustomLogHandler')) {
+        if (self::opt('useCustomLogHandler')) {
             $logLoc = '(Custom log handler)';
         } else {
             $logLoc = self::opt('logLocation');
@@ -1520,9 +1464,7 @@ class System_Daemon
             $chownFiles[] = dirname(self::opt('appPidLocation'));
         }
         $chownFiles[] = self::opt('appPidLocation');
-        if (!is_object(self::opt('usePEARLogInstance'))) {
-            $chownFiles[] = self::opt('logLocation');
-        }
+        $chownFiles[] = self::opt('logLocation');
 
         // Chown pid- & log file
         // We have to change owner in case of identity change.

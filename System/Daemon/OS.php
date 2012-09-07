@@ -222,7 +222,6 @@ class System_Daemon_OS
 
     /**
      * Returns the directory where data is stored (like init.d templates)
-     * Could be PEAR's data directory but could also be a local one.
      *
      * @return string
      */
@@ -230,24 +229,6 @@ class System_Daemon_OS
     {
         $tried_dirs = array();
         $dir        = false;
-
-        if (class_exists('PEAR_Config', true)) {
-            $config = PEAR_Config::singleton();
-            if (PEAR::isError($config)) {
-                $this->errors[] = $config->getMessage();
-                return false;
-            }
-
-            $try_dir = realpath(
-                $config->get('data_dir').
-                '/System_Daemon/data'
-            );
-            if (!is_dir($try_dir)) {
-                $tried_dirs[] = $try_dir;
-            } else {
-                $dir = $try_dir;
-            }
-        }
 
         if (!$dir) {
             $try_dir = realpath(dirname(__FILE__).'/../../data');

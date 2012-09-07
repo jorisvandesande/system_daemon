@@ -26,7 +26,7 @@
  * @link      http://trac.plutonia.nl/projects/system_daemon
  * * 
  */
-class System_Daemon_Exception extends PEAR_Exception
+class System_Daemon_Exception extends Exception
 {
 
 }
